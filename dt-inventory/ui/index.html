@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./assets/fonts/Girloy.css">
+    <link rel="stylesheet" href="./assets/css/inventory.css">
+    <link rel="stylesheet" type="text/css" href="./assets/css/jquery-ui.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.13"></script>
+    <script src = "https://code.jquery.com/jquery-3.6.0.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+
+    <title>Inventory</title>
+</head>
+
+<body>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+
+    <div id="inventory" class="inventory">
+        <div class="inventory__main--wrapper">
+            <div class="inventory__wrapper">
+
+                <!-- left side -->
+                <div class="menu" id="left-menu">
+                    <div class="menu__header">
+                        <div class="menu__header--icon">
+                            <img src="./assets/img/backpack.svg" alt="">
+                        </div>
+                        <div class="menu__header--title">
+                            <h1>Your Inventory</h1>
+                            <span>Here you can manage<br>the items on you</span>
+                        </div>
+                    </div>
+                    <div class="menu__sort">
+                        <div class="menu__sort--input-wrapper">
+                            <img src="./assets/img/dashicons_search.svg" alt="">
+                            <input id="inventory-search-input" type="text" name="" v-model="search">
+                        </div>
+                        <div class="menu__sort--items" id="my__sort-category">
+                            <div class="menu__sort--item" 
+                                 v-for="category in categories"
+                                 :key="category.id"
+                                 :id="'my__sort-' + category.id"
+                                 @click="currentCategory = category.id">
+                                <img :src="category.icon" alt="">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="menu__list-items" id="inventory-itemlist" >
+                        <div :class="filteredItems[n-1] ? 'menu__list-item active' : 'menu__list-item disabled'" v-for="n in 20" :key="n" @contextmenu.prevent="previewItem(filteredItems[n-1].name, filteredItems[n-1].label, filteredItems[n-1].count, filteredItems[n-1].type , filteredItems[n-1].usable)">
+                            <img :src="'./assets/img/items/' + filteredItems[n-1].name + '.png'" v-if="filteredItems[n-1]">
+                        </div>
+                    </div>
+                    <div class="menu__capacity">
+                        <div class="menu__capacity--title">
+                            <h1>Capacity</h1>
+                            <span>{{ Math.floor(MyMinCapacity) }}/<span class="grey">{{ MyMaxCapacity }}</span> kg</span>
+                        </div>
+                        <div class="menu__capacity--wrapper">
+                            <div class="menu__capacity--green" :style="{width: MyMinCapacity / MyMaxCapacity * 100 + '%'}"></div>
+                            <div class="menu__capacity--bg"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- center side -->
+                <div class="center__menu">
+                    <div class="center__menu-header--wrapper">
+                        <div class="center__menu-header">
+                            <div class="center__menu-header--icon">
+                                <img src="./assets/img/healthicons_body.svg" alt="">
+                            </div>
+                            <div class="center__menu-header--title">
+                                <h1>Your Body</h1>
+                                <span>Here, you can put things from your inventory</span>
+                            </div>
+                        </div>
+                        <div class="center__menu-header--exit" @click="closeInventory()">
+                            <img src="./assets/img/eva_close-fill.svg" alt="">
+                        </div>
+                    </div>
+                    <div class="center__columns">
+                        <div class="center__column">
+                            <template v-for="item in ['helmet', 'tshirt', 'bproof', 'bags', 'pants', 'shoes']">
+                                <div :id="'clothe-' + item" class="center__column--item" :onclick="'ManageClotheSlot(\'' + item + '\')'">
+                                    <img :src="'./assets/img/clothes/' + {
+                                        helmet: 'baseball-cap',
+                                        tshirt: 'black',
+                                        bproof: 'bulletproof',
+                                        bags: 'backpack',
+                                        pants: 'trousers',
+                                        shoes: 'sneakers'
+                                    }[item] + '.svg'" alt="">
+                                </div>
+                            </template>
+                        </div>
+                        <div class="center__column">
+                            <div id="clothe-pack" class="center__column--item" onclick="ManageClotheSlot('pack')">
+                                <img src="./assets/img/clothes/game-icons_clothes.svg" alt="">
+                            </div>
+                        </div>
+                        <div class="center__column">
+                            <template v-for="item in ['mask', 'glasses', 'ears', 'chain', 'watch', 'ring']">
+                                <div :id="'clothe-' + item" class="center__column--item" :onclick="'ManageClotheSlot(\'' + item + '\')'">
+                                    <img :src="'./assets/img/clothes/' + {
+                                        mask: 'carnival-mask-black-shape',
+                                        glasses: 'eyeglasses',
+                                        ears: 'earrings',
+                                        chain: 'medal-necklace',
+                                        watch: 'wrist-watch',
+                                        ring: 'ring-with-precious-stone'
+                                    }[item] + '.svg'" alt="">
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- rigth side -->
+                <div class="menu">
+                    <div class="menu__header">
+                        <div class="menu__header--icon">
+                            <img src="./assets/img/healthicons_body.svg" alt="">
+                        </div>
+                        <div class="menu__header--title">
+                            <h1 id="menu__title--vault">{{ rightSide.name }}</h1>
+                            <span>{{ rightSide.desc }}</span>
+                        </div>
+                    </div>
+                    <div class="vault-overlay" v-if="!vaultData.active">
+                        <div class="vault-lock">
+                            <img src="./assets/img/lock.svg" alt="Locked">
+                        </div>
+                    </div>
+                    <div class="menu__sort" :class="{ 'blur-content': !vaultData.active }">
+                        <div class="menu__sort--input-wrapper">
+                            <img src="./assets/img/dashicons_search.svg" alt="">
+                            <input id="vault-search-input" type="text" name="">
+                        </div>
+                        <div class="menu__sort--items" id="other__sort-category">
+                            <div class="menu__sort--item" 
+                                 v-for="category in categories" 
+                                 :key="category.id"
+                                 :id="'other__sort-' + category.id"
+                                 @click="currentCategory = category.id">
+                                <img :src="category.icon" alt="">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="menu__list-items" id="vault-itemlist" :class="{ 'blur-content': !vaultData.active }">
+                        <div :class="filteredVaultItems[n-1] ? 'menu__list-item active' : 'menu__list-item disabled'" v-for="n in 20" :key="n">
+                            <img :src="'./assets/img/items/' + filteredVaultItems[n-1].name + '.png'" v-if="filteredVaultItems[n-1]">
+                        </div>
+                    </div>
+                    <div class="menu__capacity" :class="{ 'blur-content': !vaultData.active }">
+                        <div class="menu__capacity--title">
+                            <h1>Capacity</h1>
+                            <span>{{ vaultData.capacity }}/<span class="grey">{{ vaultData.maxCapacity }}</span> kg</span>
+                        </div>
+                        <div class="menu__capacity--wrapper">
+                            <div class="menu__capacity--green" :style="{width: vaultData.capacity / vaultData.maxCapacity * 100 + '%'}"></div>
+                            <div class="menu__capacity--bg"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="fastmenu">
+                    <div class="fastmenu__header">
+                        <div class="fastmenu__header--icon">
+                            <img src="./assets/img/healthicons_body.svg" alt="">
+                        </div>
+                        <div class="fastmenu__header--title">
+                            <h1>Quick Access</h1>
+                            <span>Here, you can put things from your inventory</span>
+                        </div>
+                    </div>
+                    
+                    <div class="fastmenu__items" id="fastmenu__items">
+                        <div v-for="n in 5" :key="n" :class="fastMenuItems[n-1] ? 'fastmenu__item active' : 'fastmenu__item disabled'">
+                            <img :src="'./assets/img/items/' + fastMenuItems[n-1].name + '.png'" v-if="fastMenuItems[n-1]">
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>  
+        </div>
+
+        <div class="inventory__modals">
+            <!-- Preview Modal -->
+            <div class="inventory__modal" id="item-manage-actions-inventory" style="display: none;" v-show="previewModal.show" :style="previewModal.style">
+                <div class="inventory__modal--container" v-if="previewModal.item">
+                    <div class="inventory__modal--title_container">
+                        <div class="inventory__modal--title">
+                            <img :src="previewModal.imagePath" alt="">
+                            <span>{{ previewModal.item.label.replace('_appo_', "'") }}</span>
+                        </div>
+                        <span>x{{ previewModal.item.count.toLocaleString('ro-RO') }}</span>
+                    </div>
+                    <div class="inventory__modal--items">
+                        <div class="inventory__modal--icon nohide" @click="useItem(previewModal.item)" v-if="previewModal.item.usable">
+                            <img class="nohide" src="./assets/img/actions/white/bi_arrow-down-square.svg" alt="">
+                        </div>
+                        <div class="inventory__modal--icon nohide" @click="giveItem(previewModal.item)">
+                            <img class="nohide" src="./assets/img/actions/white/user.svg" alt="">
+                        </div>
+                        <div class="inventory__modal--icon nohide" @click="showCount('drop', previewModal.item)">
+                            <img class="nohide" src="./assets/img/actions/white/arrow.svg" alt="">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Count Modal -->
+            <div class="inventory__modal" id="item-manage-count-inventory" v-show="countModal.show" :style="countModal.style">
+                <div class="inventory__modal--container" v-if="countModal.item">
+                    <div class="inventory__modal--title_container">
+                        <div class="inventory__modal--title">
+                            <img :src="countModal.imagePath" alt="">
+                            <span>{{ countModal.item.label.replace('_appo_', "'") }}</span>
+                        </div>
+                        <span>x{{ countModal.item.count }}</span>
+                    </div>
+                    <div class="inventory__modal--items">
+                        <div class="inventory__modal--items_wrapper">
+                            <div class="inventory__modal--btn nohide" @click="adjustCount(1)">+</div>
+                            <input type="number" class="nohide writable" v-model.number="countModal.selectedCount" min="0" :max="countModal.item.count">
+                            <div class="inventory__modal--btn nohide" @click="adjustCount(-1)">-</div>
+                        </div>
+                        <div class="inventory__modal--item_btn nohide" @click="handleInventoryAction()">
+                            Confirm
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="./assets/scripts/app.js" type="text/javascript"></script>
+    </body>
+</html>
