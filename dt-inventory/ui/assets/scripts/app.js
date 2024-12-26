@@ -1,16 +1,7 @@
 const inventory = new Vue({
     el: '#inventory',
     data: {
-        items: [
-            {
-                name: 'water',
-                label: 'Pistol Ammo',
-                type: 'ammo',
-                usable: true,
-                count: 4,
-                weight: 0.1
-            }
-        ],
+        items: [],
         fastMenuItems: [],
         MyMinCapacity: 0,
         MyMaxCapacity: 100,
