@@ -1,5 +1,7 @@
 # FiveM Inventory System
 
+# Preview : https://imgur.com/0i1UO4N
+
 A cool inventory system for FiveM servers.
 
 ## Framework
